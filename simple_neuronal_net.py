@@ -93,7 +93,7 @@ class NeuronalNet:
 
 DATA_SIZE = 500000
 TRAIN_BEFORE_VISUALIZE = 20000
-SIZE_VISUAL = 5000
+SIZE_VISUAL = 70
 
 all_outputs_x = []
 all_outputs_y = []
@@ -116,17 +116,25 @@ for i in range(0, DATA_SIZE):
         output_z = []
         output_value = []
 
-        for i in range(0, SIZE_VISUAL):
-            inputx = np.random.random() * 2.44 - 1.22
-            inputy = np.random.random() * 2.44 - 1.22
-            output = n.fire(inputx, inputy)
+        for counter_x in range(0, SIZE_VISUAL):
+            for counter_y in range(0, SIZE_VISUAL):
+                inputx = 1.22 - counter_x / SIZE_VISUAL * 2.44
+                inputy = 1.22 - counter_y / SIZE_VISUAL * 2.44
+                output = n.fire(inputx, inputy)
 
-            output_x.append(inputx)
-            output_y.append(inputy)
-            output_value.append(output)
-            output_z.append(z)
+                output_x.append(inputx)
+                output_y.append(inputy)
+                output_value.append(output)
+                output_z.append(z)
 
         sc = plt.scatter(output_x, output_y, c=output_value, s=20)
+        plt.colorbar(sc)
+        plt.show()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        sc = ax.scatter(output_x, output_y, output_value, c=output_value, s=20)
         plt.colorbar(sc)
         plt.show()
 

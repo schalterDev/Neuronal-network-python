@@ -6,11 +6,7 @@ import numpy as np
 
 
 def calculate_output(x, y):
-    distance = math.sqrt(x * x + y * y)
-    if distance <= 1:
-        return 0.8
-    else:
-        return 0
+    return 0 if x * x + y * y > 1 else 0.8
 
 
 def sigmoid(x):

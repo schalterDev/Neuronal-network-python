@@ -19,9 +19,11 @@ def deriv_sigmoid(x):
 
 class NeuronalNet:
     def __init__(self, input_size=2, hidden_size=4, output_size=1):
-        self.learn_rate = 0.3
-        random_lower = -0.1
-        random_higher = 0.1
+        self.hidden_size = hidden_size
+
+        self.learn_rate = 0.1
+        random_lower = -1
+        random_higher = 1
 
         self.input = np.random.rand(2, 1)
         self.hidden_weight = np.random.uniform(random_lower, random_higher, (input_size + 1) * hidden_size) \
@@ -45,6 +47,27 @@ class NeuronalNet:
         self.output = np.array(
             [sigmoid(x) for x in
              np.matmul(self.hidden, self.output_weight)])
+
+        return self.output[0]
+
+    def fireHidden(self, x, y, whichHidden):
+        self.input = np.array([x, y, 1])
+
+        # hidden layer
+        self.hidden = np.array(
+            [sigmoid(x) for x in
+             np.matmul(self.input, self.hidden_weight)])
+        # add bias neuron
+        self.hidden = np.append(self.hidden, 1)
+
+        one_hot = np.zeros((self.hidden_size + 1, self.hidden_size + 1))
+        one_hot[whichHidden][whichHidden] = 1
+        output_weight_copy = np.matmul(one_hot, self.output_weight)
+
+        # output layer
+        self.output = np.array(
+            [sigmoid(x) for x in
+             np.matmul(self.hidden, output_weight_copy)])
 
         return self.output[0]
 
@@ -91,8 +114,8 @@ class NeuronalNet:
         self.hidden_weight = new_hidden_weights
 
 
-DATA_SIZE = 500000
-TRAIN_BEFORE_VISUALIZE = 20000
+DATA_SIZE = 1000000
+TRAIN_BEFORE_VISUALIZE = 10000
 SIZE_VISUAL = 70
 
 all_outputs_x = []
@@ -111,10 +134,9 @@ for i in range(0, DATA_SIZE):
 
     if i % TRAIN_BEFORE_VISUALIZE == 0:
         z = int(i / TRAIN_BEFORE_VISUALIZE)
-        output_x = []
-        output_y = []
-        output_z = []
-        output_value = []
+        output_x = np.empty(SIZE_VISUAL * SIZE_VISUAL)
+        output_y = np.empty(SIZE_VISUAL * SIZE_VISUAL)
+        output_value = np.empty((7, SIZE_VISUAL * SIZE_VISUAL))
 
         for counter_x in range(0, SIZE_VISUAL):
             for counter_y in range(0, SIZE_VISUAL):
@@ -122,36 +144,25 @@ for i in range(0, DATA_SIZE):
                 inputy = 1.22 - counter_y / SIZE_VISUAL * 2.44
                 output = n.fire(inputx, inputy)
 
-                output_x.append(inputx)
-                output_y.append(inputy)
-                output_value.append(output)
-                output_z.append(z)
+                output_x[counter_x * SIZE_VISUAL + counter_y] = inputx
+                output_y[counter_x * SIZE_VISUAL + counter_y] = inputy
+                output_value[0][counter_x * SIZE_VISUAL + counter_y] = output
 
-        sc = plt.scatter(output_x, output_y, c=output_value, s=20)
-        plt.colorbar(sc)
+                for i in range(5):
+                    outputHidden = n.fireHidden(inputx, inputy, i)
+                    output_value[1 + i][counter_x * SIZE_VISUAL + counter_y] = outputHidden
+
+        fig, ax = plt.subplots(nrows=3, ncols=3)
+        sc = None
+
+        titles = ["Output", "Hidden 0", "", "Hidden 1", "Hidden 2", "", "Hidden 3", "Bias", ""]
+
+        for index_row, row in enumerate(ax):
+            for index_col, col in enumerate(row):
+                if index_col != 2:
+                    sc = col.scatter(output_x, output_y, c=output_value[index_row * 2 + index_col], s=20)
+
+                col.set_title(titles[index_row * 3 + index_col])
+
+        fig.colorbar(sc)
         plt.show()
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        sc = ax.scatter(output_x, output_y, output_value, c=output_value, s=20)
-        plt.colorbar(sc)
-        plt.show()
-
-        # if z >= 3:
-        #     del all_outputs_x[:SIZE_VISUAL]
-        #     del all_outputs_y[:SIZE_VISUAL]
-        #     del all_outputs_z[:SIZE_VISUAL]
-        #     del all_values[:SIZE_VISUAL]
-        #
-        # all_outputs_x += output_x
-        # all_outputs_y += output_y
-        # all_outputs_z += output_z
-        # all_values += output_value
-        #
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111, projection='3d')
-        #
-        # sc = ax.scatter(all_outputs_x, all_outputs_y, all_outputs_z, c=all_values, s=20)
-        # plt.colorbar(sc)
-        # plt.show()
